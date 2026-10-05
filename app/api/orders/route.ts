@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { z } from "zod";
+import { apiClient } from "@/lib/api-auth";
+import { json, preflight } from "@/lib/api-response";
 
-import { sendOrderConfirmation } from '@/lib/mailgun'
-import { hasSupabaseEnv } from '@/lib/supabase/config'
-import { createClient } from '@/lib/supabase/server'
+import { sendOrderConfirmation } from "@/lib/mailgun";
+import { hasSupabaseEnv } from "@/lib/supabase/config";
+export const OPTIONS = preflight;
 
 const orderSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
@@ -11,8 +12,8 @@ const orderSchema = z.object({
   phone: z.string().trim().min(7).max(30),
   deliveryAddress: z.string().trim().min(8).max(300),
   deliveryArea: z.string().trim().min(2).max(100),
-  paymentMethod: z.literal('Bank Transfer'),
-  notes: z.string().trim().max(500).optional().default(''),
+  paymentMethod: z.literal("Bank Transfer"),
+  notes: z.string().trim().max(500).optional().default(""),
   items: z
     .array(
       z.object({
@@ -22,7 +23,7 @@ const orderSchema = z.object({
     )
     .min(1)
     .max(20),
-})
+});
 
 const resultSchema = z.object({
   reference: z.string(),
@@ -36,36 +37,60 @@ const resultSchema = z.object({
       unit_price: z.number(),
     }),
   ),
-})
+});
 
 export async function POST(request: Request) {
+  const NextResponse = {
+    json: (body: unknown, options?: { status: number }) =>
+      json(request, body, options?.status ?? 200),
+  };
   if (!hasSupabaseEnv()) {
-    return NextResponse.json({ error: 'The shop database is not configured.' }, { status: 503 })
+    return NextResponse.json(
+      { error: "The shop database is not configured." },
+      { status: 503 },
+    );
   }
 
-  const supabase = await createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData.user) {
-    return NextResponse.json({ error: 'Please sign in with Google before checkout.' }, { status: 401 })
-  }
-
-  let body: unknown
+  let supabase;
   try {
-    body = await request.json()
+    supabase = await apiClient(request);
   } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
+    return NextResponse.json(
+      { error: "Invalid authorization" },
+      { status: 401 },
+    );
+  }
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) {
+    return NextResponse.json(
+      { error: "Please sign in with Google before checkout." },
+      { status: 401 },
+    );
   }
 
-  const parsed = orderSchema.safeParse(body)
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
+  }
+
+  const parsed = orderSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Please check your checkout details.', fields: parsed.error.flatten().fieldErrors },
+      {
+        error: "Please check your checkout details.",
+        fields: parsed.error.flatten().fieldErrors,
+      },
       { status: 400 },
-    )
+    );
   }
 
-  const payload = parsed.data
-  const { data, error } = await supabase.rpc('create_shop_order', {
+  const payload = parsed.data;
+  const { data, error } = await supabase.rpc("create_shop_order", {
     p_customer_name: payload.customerName,
     p_email: payload.email,
     p_phone: payload.phone,
@@ -77,20 +102,23 @@ export async function POST(request: Request) {
       product_id: item.productId,
       quantity: item.quantity,
     })),
-  })
+  });
 
   if (error) {
-    console.error('Order transaction failed:', error)
+    console.error("Order transaction failed:", error);
     return NextResponse.json(
-      { error: 'We could not place your order. Check the cart and try again.' },
+      { error: "We could not place your order. Check the cart and try again." },
       { status: 400 },
-    )
+    );
   }
 
-  const result = resultSchema.safeParse(data)
+  const result = resultSchema.safeParse(data);
   if (!result.success) {
-    console.error('Unexpected order result:', result.error)
-    return NextResponse.json({ error: 'The order response was invalid.' }, { status: 500 })
+    console.error("Unexpected order result:", result.error);
+    return NextResponse.json(
+      { error: "The order response was invalid." },
+      { status: 500 },
+    );
   }
 
   const emailSent = await sendOrderConfirmation({
@@ -106,10 +134,12 @@ export async function POST(request: Request) {
     deliveryAddress: payload.deliveryAddress,
     deliveryArea: payload.deliveryArea,
     paymentMethod: payload.paymentMethod,
-  })
+  });
 
   return NextResponse.json({
     reference: result.data.reference,
     emailSent,
-  })
+    total: result.data.total,
+    email: payload.email,
+  });
 }

@@ -8,8 +8,18 @@ __v0_jsx-dev-runtime.ts
 
 # Environment variables
 .env*.local
-.env.example
+.env
+.env.*
+!.env.example
 # Common ignores
 node_modules
 .next/
 .DS_Store
+mobile/dist/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/**/build/
+mobile/android/app/src/main/assets/public/
+*.jks
+*.keystore
+*.tsbuildinfo

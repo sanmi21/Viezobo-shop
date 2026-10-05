@@ -1,0 +1,245 @@
+:root {
+  --cream: #fffaf5;
+  --ink: #351522;
+  --pink: #f22b86;
+  --wine: #b70b4c;
+  --surface: #f8ede8;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: var(--cream);
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.app {
+  max-width: 760px;
+  margin: auto;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(18px + env(safe-area-inset-top)) 20px 18px;
+  border-bottom: 1px solid #35152212;
+}
+.brand {
+  background: var(--wine);
+  color: white;
+  border: 0;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.header > span {
+  font-size: 12px;
+}
+.bag {
+  margin-left: auto;
+  border: 1px solid #35152222;
+  border-radius: 24px;
+  padding: 10px;
+  background: transparent;
+}
+main {
+  padding: 22px 20px calc(100px + env(safe-area-inset-bottom));
+}
+h1 {
+  font-size: 36px;
+  letter-spacing: -1.4px;
+  line-height: 1.08;
+}
+h2 {
+  font-size: 26px;
+  letter-spacing: -0.7px;
+}
+h3 {
+  margin: 0;
+  font-size: 19px;
+}
+p {
+  line-height: 1.6;
+  color: #351522aa;
+}
+small {
+  color: #35152288;
+}
+.hero {
+  padding: 22px 0 30px;
+}
+.hero > span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--wine);
+}
+.hero h1 {
+  font-size: 46px;
+  margin: 20px 0;
+}
+.hero em {
+  font-family: Georgia, serif;
+  color: var(--wine);
+  font-weight: 400;
+}
+.products {
+  display: grid;
+  gap: 20px;
+}
+.product {
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.product > img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+.product > div {
+  padding: 20px;
+}
+.product p {
+  font-size: 14px;
+}
+.product footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.button {
+  border: 0;
+  border-radius: 28px;
+  padding: 14px 24px;
+  background: var(--pink);
+  color: white;
+  font-weight: 700;
+  min-height: 46px;
+}
+.panel {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.cart-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #35152215;
+}
+.cart-item img {
+  width: 70px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+.quantity {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.quantity button {
+  border: 0;
+  background: var(--cream);
+  padding: 8px;
+  border-radius: 12px;
+  min-height: 36px;
+}
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+}
+.form {
+  display: grid;
+  gap: 18px;
+}
+.form label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.form input,
+.form textarea {
+  border: 1px solid #35152225;
+  border-radius: 14px;
+  padding: 14px;
+  width: 100%;
+  background: white;
+  outline-color: var(--wine);
+}
+.form textarea {
+  min-height: 90px;
+}
+.notice {
+  background: #fff1d9;
+  border: 1px solid #f0d9ae;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 14px;
+}
+.navigation {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 760px;
+  background: var(--cream);
+  border-top: 1px solid #35152222;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-around;
+}
+.navigation button {
+  background: transparent;
+  border: 0;
+  padding: 12px;
+  color: var(--ink);
+  font-size: 14px;
+}
+.navigation .active {
+  color: var(--wine);
+  font-weight: 700;
+}
+.success {
+  text-align: center;
+  padding: 40px 22px;
+}
+.check {
+  display: inline-flex;
+  border-radius: 50%;
+  padding: 18px;
+  background: #dce8d6;
+  color: #079a50;
+  font-size: 30px;
+}
+@media (min-width: 580px) {
+  .products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero h1 {
+    font-size: 58px;
+  }
+}
