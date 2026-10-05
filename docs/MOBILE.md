@@ -1,6 +1,8 @@
 # Android app and shared cart
 
-The shared cart, API changes, mobile frontend and Android project are implemented in source. Website and mobile production builds and isolated PostgreSQL cart tests have passed. The live migration, mobile OAuth, native Java build and physical-phone test are not yet verified.
+The shared cart, API changes, mobile frontend and Android project are implemented in source. Website and mobile production builds and isolated PostgreSQL cart tests have passed. The updated website APIs are deployed at `https://viezobo-shop.vercel.app`. The live migration, mobile OAuth, native Java build and physical-phone test are not yet verified.
+
+Production checks on 5 October 2026 confirmed that the homepage and products API return HTTP 200 (three products), signed-out cart and checkout requests return 401, and native-origin cart preflight returns 204 with `https://localhost` allowed. These checks do not prove authenticated cart writes, Realtime delivery or email delivery.
 
 ## Shared backend
 
@@ -43,6 +45,16 @@ Add `com.viezobo.shop://auth/callback` to Supabase Auth's redirect allow list. K
 The backend accepts the app's `https://localhost` origin, `capacitor://localhost`, and Vite's `http://localhost:5173`. A preview opened through a LAN IP needs an explicit additional allowed origin; do not enable unrestricted origins to work around this.
 
 ## Build and verification
+
+### Build online with GitHub Actions
+
+Android Studio is optional when using the repository's **Build Android APK** workflow (`.github/workflows/android-apk.yml`). Under GitHub **Settings → Secrets and variables → Actions → Variables**, configure `VITE_API_BASE_URL`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` with the same public values as the local mobile configuration. These are embedded in the APK; never use a Supabase service-role key or Mailgun key here.
+
+Open **Actions → Build Android APK → Run workflow**, select the branch containing the mobile source, and start it. The workflow installs locked npm dependencies, runs the isolated cart checks, builds/syncs the frontend, compiles Android with Java 21, checks the APK signature, and uploads `viezobo-debug-apk` as an artifact retained for 14 days. Download that artifact from the successful run, extract its ZIP and install `app-debug.apk` on the physical phone. Allow installation from the file manager if prompted. No emulator or local Android SDK is needed for this route.
+
+This is a test APK, not a Play Store release. Hosted runners may generate a different debug signing key on subsequent runs; uninstall the previous debug app if Android reports incompatible signatures (this removes its local session and guest cart). Signed-in cart data remains in Supabase. A successful cloud build alone does not verify physical-phone login or Realtime synchronisation. The first cloud build is pending verification.
+
+### Build locally
 
 Requirements: Node.js 22+, Android Studio 2025.2.1 or newer, its bundled JDK, Android SDK platform 36 and required build tools. Accept SDK licenses through the setup wizard. Java and the SDK were absent at the initial environment check.
 

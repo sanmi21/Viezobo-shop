@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate public mobile configuration
+        run: |
+          test -n "$VITE_API_BASE_URL" || { echo 'Set VITE_API_BASE_URL in repository Actions variables'; exit 1; }
+          test -n "$VITE_SUPABASE_URL" || { echo 'Set VITE_SUPABASE_URL in repository Actions variables'; exit 1; }
+          test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || { echo 'Set VITE_SUPABASE_PUBLISHABLE_KEY in repository Actions variables'; exit 1; }
+      - name: Install dependencies
+        run: npm ci
+      - name: Check shared cart database behaviour
+        run: npm run test:cart
+      - name: Build and sync Android assets
+        run: npm run android:sync
+      - name: Build installable debug APK
+        working-directory: mobile/android
+        run: bash ./gradlew --no-daemon assembleDebug
+      - name: Verify APK signature
+        run: "$ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose android/app/build/outputs/apk/debug/app-debug.apk"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: viezobo-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
